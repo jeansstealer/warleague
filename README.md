@@ -41,7 +41,8 @@ Snowprint changes the schedule, edit this file and run the workflow.
 ## Setup
 
 1. Repository secret `LEAGUE_FEED_URL` = the tracker's web app URL followed by
-   `?feed=league`.
+   `?feed=league`. A second person's tracker can be added as
+   `LEAGUE_FEED_URL_2`; captures from both are merged (duplicates are ignored).
 2. **Settings → Pages → Source: GitHub Actions**.
 3. Run the workflow once.
 

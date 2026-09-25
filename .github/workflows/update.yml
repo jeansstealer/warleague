@@ -33,18 +33,21 @@ jobs:
       - name: Test the ingest script
         run: python3 -m unittest discover -s scripts
 
-      - name: Fetch the latest capture and store it if new
+      - name: Fetch the latest capture from each sheet and store it if new
         env:
+          # One feed per spreadsheet that captures the leaderboard (you, the guild leader, ...).
           LEAGUE_FEED_URL: ${{ secrets.LEAGUE_FEED_URL }}
+          LEAGUE_FEED_URL_2: ${{ secrets.LEAGUE_FEED_URL_2 }}
         run: |
-          if [ -n "$LEAGUE_FEED_URL" ]; then
+          i=0
+          for url in "$LEAGUE_FEED_URL" "$LEAGUE_FEED_URL_2"; do
+            [ -n "$url" ] || continue
+            i=$((i + 1))
             # A failed fetch leaves the stored data untouched.
-            curl --fail --location --silent --show-error --retry 3 --max-time 45 \
-              "$LEAGUE_FEED_URL" --output "$RUNNER_TEMP/feed.json" || echo '{}' > "$RUNNER_TEMP/feed.json"
-          else
-            echo '{}' > "$RUNNER_TEMP/feed.json"
-          fi
-          python3 scripts/ingest.py "$RUNNER_TEMP/feed.json"
+            curl --fail --location --silent --show-error --retry 3 --max-time 45               "$url" --output "$RUNNER_TEMP/feed$i.json" || echo '{}' > "$RUNNER_TEMP/feed$i.json"
+            python3 scripts/ingest.py "$RUNNER_TEMP/feed$i.json"
+          done
+          [ -f data/league.json ] || python3 scripts/ingest.py /dev/null
 
       - name: Commit new snapshots
         run: |
